@@ -104,7 +104,13 @@ function init() {
     remoteConnection.channel = receiveChannel;
   };
 
-  const socket = io("http://localhost:3000");
+  const socketBackend = import.meta.env.PROD
+    ? import.meta.env.SERVER_URL
+    : "http://localhost:3000";
+
+  console.log(import.meta.env.SERVER_URL, socketBackend);
+
+  const socket = io(socketBackend);
 
   socket.on("connect", () => {
     ownSocketId?.setAttribute("ownSocketId", socket.id);

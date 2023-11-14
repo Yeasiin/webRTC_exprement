@@ -1,13 +1,21 @@
 import express from "express";
+import { config } from "dotenv";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
 
+config();
+
 const app = express();
+const frontendOrigin =
+  process.env.NODE_ENV === "production"
+    ? process.env.frontend_url
+    : "http://localhost:5173";
 
 const server = createServer(app);
+
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: frontendOrigin,
     methods: ["GET", "POST"],
   },
 });
