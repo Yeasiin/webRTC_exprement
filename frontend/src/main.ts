@@ -184,12 +184,14 @@ function init() {
     const [remoteSteam] = event.streams;
     console.log(remoteSteam);
     remoteVideo.srcObject = remoteSteam;
+    console.log("remote -track");
   });
 
   localConnection.addEventListener("track", async (event) => {
     const [remoteSteam] = event.streams;
     console.log(remoteSteam);
     remoteVideo.srcObject = remoteSteam;
+    console.log("local -track");
   });
 
   function peerConnectionOffer({ to, from }: RecipientType) {
@@ -234,9 +236,10 @@ function init() {
   }
 
   function handleSteamSuccess(steam: MediaStream) {
-    steam
-      .getTracks()
-      .forEach((track) => localConnection.addTrack(track, steam));
+    steam.getTracks().forEach((track) => {
+      localConnection.addTrack(track, steam);
+      remoteConnection.addTrack(track, steam);
+    });
 
     // const videoTracks = steam.getVideoTracks();
 
