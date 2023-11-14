@@ -186,6 +186,12 @@ function init() {
     remoteVideo.srcObject = remoteSteam;
   });
 
+  localConnection.addEventListener("track", async (event) => {
+    const [remoteSteam] = event.streams;
+    console.log(remoteSteam);
+    remoteVideo.srcObject = remoteSteam;
+  });
+
   function peerConnectionOffer({ to, from }: RecipientType) {
     localConnection
       .createOffer()
