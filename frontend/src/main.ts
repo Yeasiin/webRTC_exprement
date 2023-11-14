@@ -113,7 +113,10 @@ function init() {
   const socket = io(socketBackend);
 
   socket.on("connect", () => {
-    ownSocketId?.setAttribute("ownSocketId", socket.id);
+    if (ownSocketId) {
+      ownSocketId.setAttribute("ownSocketId", socket.id);
+      ownSocketId.textContent = socket.id;
+    }
     console.log(socket.id);
   });
 
