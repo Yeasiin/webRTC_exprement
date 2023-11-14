@@ -105,10 +105,10 @@ function init() {
   };
 
   const socketBackend = import.meta.env.PROD
-    ? import.meta.env.SERVER_URL
+    ? "https://webrtcexprement-production.up.railway.app"
     : "http://localhost:3000";
 
-  console.log(import.meta.env.SERVER_URL, socketBackend);
+  console.log(socketBackend);
 
   const socket = io(socketBackend);
 

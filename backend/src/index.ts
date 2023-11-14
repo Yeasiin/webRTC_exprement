@@ -8,7 +8,7 @@ config();
 const app = express();
 const frontendOrigin =
   process.env.NODE_ENV === "production"
-    ? process.env.frontend_url
+    ? process.env.FRONTEND_URL
     : "http://localhost:5173";
 
 const server = createServer(app);
