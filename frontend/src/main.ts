@@ -120,12 +120,13 @@ function init() {
   socket.on("disconnect", () => console.log("disconnect", socket.id));
 
   socket.on("rtc_offer", (data) => {
-    console.log("rtc offer", data);
+    console.log("rtc offer");
     const isAcceptedOffer = confirm("are you sure");
     isAcceptedOffer && peerConnectionAccept(data);
   });
 
   socket.on("rtc_answer", (data) => {
+    console.log("rtc_answer");
     localConnection
       .setRemoteDescription(data.answer)
       .then(() => console.log("rtc_answer successful"))

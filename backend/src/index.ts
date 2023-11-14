@@ -8,8 +8,10 @@ config();
 const app = express();
 const frontendOrigin =
   process.env.NODE_ENV === "production"
-    ? process.env.FRONTEND_URL
+    ? "https://rtc-v1.netlify.app"
     : "http://localhost:5173";
+
+console.log(frontendOrigin, "running");
 
 const server = createServer(app);
 
@@ -34,10 +36,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("rtc_offer", (data) => {
+    console.log("rtc_offer");
     socket.to(data.to).emit("rtc_offer", data);
   });
 
   socket.on("rtc_answer", (data) => {
+    console.log("rtc_answer");
     socket.to(data.to).emit("rtc_answer", data);
   });
 
