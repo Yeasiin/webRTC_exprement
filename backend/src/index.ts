@@ -15,7 +15,7 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: frontendOrigin,
+    origin: "https://luxury-mandazi-88e838.netlify.app",
     methods: ["GET", "POST"],
   },
 });
