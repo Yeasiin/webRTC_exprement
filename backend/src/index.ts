@@ -42,6 +42,14 @@ io.on("connection", (socket) => {
     socket.to(id).emit("from_server", msg);
   });
 
+  socket.on("ring", (data) => {
+    socket.to(data.to).emit("ring", data);
+  });
+
+  socket.on("ring-agree", (data) => {
+    socket.to(data.to).emit("ring-agree", data);
+  });
+
   socket.on("rtc_offer", (data) => {
     console.log("rtc_offer");
     socket.to(data.to).emit("rtc_offer", data);
