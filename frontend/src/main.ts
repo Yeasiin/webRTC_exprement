@@ -15,6 +15,10 @@ declare global {
 
 const store = {
   isLocal: false,
+  isAcceptOffer: false,
+  isFirst: true,
+  socketId: "",
+  remoteSocketId: "",
 };
 
 const mediaConfig = {
@@ -29,8 +33,20 @@ type RecipientType = {
 };
 // initialize the app
 function init() {
+  // socket init
+  const socketBackend = import.meta.env.PROD
+    ? "https://webrtcexprement-production.up.railway.app"
+    : "http://localhost:3000";
+
+  console.log(socketBackend);
+
+  const socket = io(socketBackend);
+
   // DOM
   const ownSocketId = document.querySelector("[ownSocketId]");
+  const callMeBtn = document.querySelector(".call-me-btn");
+  const callBtn = document.querySelector(".call-start");
+
   const ownVideo = document.querySelector(
     "video[localPeer]"
   ) as HTMLVideoElement;
@@ -48,6 +64,23 @@ function init() {
 
     ownSocketId.textContent =
       "Copy - " + ownSocketId.getAttribute("ownSocketId");
+  });
+
+  callMeBtn?.addEventListener("click", () => {
+    if (store.socketId) {
+      socket?.emit("call-me", store.socketId);
+      callMeBtn.textContent = "Ready 👍";
+    } else {
+      callMeBtn.textContent = "Not Ready 👎";
+    }
+    console.log(store);
+  });
+
+  callBtn?.addEventListener("click", () => {
+    const args = { to: store.remoteSocketId, from: store.socketId };
+    if (!args.to || !args.from) return console.log("what are you doing?");
+
+    socket?.emit("ring", args);
   });
 
   askCameraPermissionBtn?.addEventListener("click", () => {
@@ -105,17 +138,12 @@ function init() {
     remoteConnection.channel = receiveChannel;
   };
 
-  const socketBackend = import.meta.env.PROD
-    ? "https://webrtcexprement-production.up.railway.app"
-    : "http://localhost:3000";
-
-  console.log(socketBackend);
-
-  const socket = io(socketBackend);
+  // socket implementation
 
   socket.on("connect", () => {
     if (ownSocketId) {
       ownSocketId.setAttribute("ownSocketId", socket.id);
+      store.socketId = socket.id;
       ownSocketId.textContent = socket.id;
     }
     console.log(socket.id);
@@ -123,17 +151,53 @@ function init() {
 
   socket.on("disconnect", () => console.log("disconnect", socket.id));
 
+  socket.on("call-him", (data) => {
+    store.remoteSocketId = data;
+    if (store.remoteSocketId) {
+      callBtn?.setAttribute("isVisible", "true");
+    }
+  });
+
+  socket.on("ring", (data) => {
+    if (!store.isAcceptOffer) {
+      store.isAcceptOffer = confirm("are you sure");
+    }
+
+    const args = { to: data.from, from: data.to };
+    if (store.isAcceptOffer) {
+      socket.emit("ring-agree", args);
+    }
+  });
+
+  socket.on("ring-agree", (data) => {
+    const arg = { from: data.to, to: data.from };
+
+    if (!arg.to || !arg.from) return console.log("what are you doing?");
+
+    console.log(sendChannel);
+    peerConnectionOffer(arg as RecipientType);
+  });
+
   socket.on("rtc_offer", (data) => {
     console.log("rtc offer");
-    const isAcceptedOffer = confirm("are you sure");
-    isAcceptedOffer && peerConnectionAccept(data);
+    // const isAcceptedOffer = confirm("are you sure");
+    // isAcceptedOffer && peerConnectionAccept(data);
+    peerConnectionAccept(data);
   });
 
   socket.on("rtc_answer", (data) => {
     console.log("rtc_answer");
     localConnection
       .setRemoteDescription(data.answer)
-      .then(() => console.log("rtc_answer successful"))
+      .then(() => {
+        if (store.isFirst) {
+          const args = { to: data.from, from: data.to };
+          if (!args.to || !args.from) return console.log("what are you doing?");
+          socket?.emit("ring", args);
+          store.isFirst = false;
+        }
+      })
+
       .catch((err) => console.log("failed", err));
   });
 

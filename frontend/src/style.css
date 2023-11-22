@@ -89,6 +89,14 @@ button:focus-visible {
 .gap-4 {
   gap: 4rem;
 }
+button[isVisible="false"],
+.d-hidden {
+  display: none;
+}
+button[isVisible="true"],
+.d-show {
+  display: inline-block;
+}
 /* components */
 .videos {
   display: flex;
