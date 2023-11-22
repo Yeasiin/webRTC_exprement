@@ -76,8 +76,8 @@ function init() {
     .then(handleSteamSuccess)
     .catch((err) => console.log("err", err));
 
-  // localConnection.onicecandidate = (e) =>
-  //   console.log("local ice", localConnection.localDescription);
+  localConnection.onicecandidate = (e) =>
+    console.log("local ice", localConnection.localDescription);
 
   const sendChannel = localConnection.createDataChannel("channel");
   sendChannel.onmessage = (e) => console.log("local", e.data);
@@ -92,8 +92,9 @@ function init() {
   window._remoteConnection = remoteConnection = new RTCPeerConnection(
     iceConfiguration
   );
-  // remoteConnection.onicecandidate = (e) =>
-  //   console.log("remote ice", remoteConnection.localDescription);
+
+  remoteConnection.onicecandidate = (e) =>
+    console.log("remote ice", remoteConnection.localDescription);
 
   remoteConnection.ondatachannel = (e) => {
     receiveChannel = e.channel;

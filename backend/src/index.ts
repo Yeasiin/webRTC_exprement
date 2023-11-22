@@ -17,7 +17,8 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: frontendOrigin,
+    origin: "*",
+    // origin: frontendOrigin,
     methods: ["GET", "POST"],
   },
 });
@@ -28,7 +29,13 @@ io.on("connection", (socket) => {
   console.log("socket is connected");
 
   socket.on("from_client", (msg) => {
+    console.log("fired from client and now sending to from_client");
     socket.broadcast.emit("from_server", msg);
+  });
+
+  socket.on("call-me", (data) => {
+    console.log(data);
+    socket.broadcast.emit("call-him", data);
   });
 
   socket.on("from_client_to_specific", (id, msg) => {
