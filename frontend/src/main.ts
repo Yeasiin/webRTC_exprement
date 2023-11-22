@@ -109,7 +109,7 @@ function init() {
     .then(handleSteamSuccess)
     .catch((err) => console.log("err", err));
 
-  localConnection.onicecandidate = (e) =>
+  localConnection.onicecandidate = () =>
     console.log("local ice", localConnection.localDescription);
 
   const sendChannel = localConnection.createDataChannel("channel");
@@ -126,7 +126,7 @@ function init() {
     iceConfiguration
   );
 
-  remoteConnection.onicecandidate = (e) =>
+  remoteConnection.onicecandidate = () =>
     console.log("remote ice", remoteConnection.localDescription);
 
   remoteConnection.ondatachannel = (e) => {
