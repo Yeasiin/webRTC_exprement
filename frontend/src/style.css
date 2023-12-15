@@ -46,8 +46,8 @@ h1 {
 button {
   border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+  padding: 0.4em 0.8em;
+  font-size: 0.9em;
   font-weight: 500;
   font-family: inherit;
   /* background-color: #1a1a1a; */
@@ -65,6 +65,9 @@ button:focus-visible {
 .d-flex {
   display: flex;
 }
+.flex-column {
+  flex-direction: column;
+}
 .mt-1 {
   margin-top: 1rem;
 }
@@ -73,6 +76,9 @@ button:focus-visible {
 }
 .my-4 {
   margin-block: 4rem;
+}
+.items-start {
+  align-items: flex-start;
 }
 .items-end {
   align-items: flex-end;
@@ -99,11 +105,39 @@ button[isVisible="true"],
 }
 /* components */
 .videos {
-  display: flex;
-  max-width: 50%;
+  /* display: flex; */
+  /* max-width: 50%; */
   gap: 3rem;
+  /* margin-inline: auto; */
+  position: relative;
+}
+.container {
+  max-width: 35rem;
+  margin-inline: auto;
+}
+
+video[localPeer] {
 }
 
 video {
   max-width: 100%;
+}
+
+video[localPeer].remoteVisible {
+  z-index: 2;
+  bottom: 2rem;
+  right: 2rem;
+  height: auto;
+  width: 10rem;
+  position: absolute;
+}
+video[remotePeer].remoteVisible {
+  display: block;
+}
+video[remotePeer] {
+  display: none;
+  /* position: absolute; */
+  /* top: 0; */
+  /* left: 0; */
+  /* display: none; */
 }

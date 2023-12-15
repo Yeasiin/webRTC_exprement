@@ -11,7 +11,7 @@ const frontendOrigin =
     ? "https://rtc-v1.netlify.app"
     : "http://localhost:5173";
 
-console.log(frontendOrigin, "running");
+console.log("frontend URI=>", frontendOrigin, "running");
 
 const server = createServer(app);
 
@@ -23,44 +23,99 @@ const io = new Server(server, {
   },
 });
 
+const offers:
+  | {
+      offererSocket: string;
+      offer: any;
+      offerIceCandidate: any[];
+      answererSocket: null | string;
+      answer: null;
+      answerIceCandidate: any[];
+    }[]
+  | [] = [];
+
 app.get("/", (req, res) => res.json({ status: "success" }));
-
 io.on("connection", (socket) => {
-  console.log("socket is connected");
+  console.log("socket is connected", socket.id);
 
-  socket.on("from_client", (msg) => {
-    console.log("fired from client and now sending to from_client");
-    socket.broadcast.emit("from_server", msg);
+  socket.on("_ring:accept", (data) => {
+    socket.to(data.to).emit("_ring:accept");
   });
 
-  socket.on("call-me", (data) => {
-    console.log(data);
-    socket.broadcast.emit("call-him", data);
+  socket.on("_offer", (newOffer) => {
+    const prep = {
+      offererSocket: socket.id,
+      offer: newOffer,
+      offerIceCandidate: [],
+      answererSocket: null,
+      answer: null,
+      answerIceCandidate: [],
+    };
+
+    offers.push(prep);
+
+    socket.broadcast.emit("_offer", offers.slice(-1));
   });
 
-  socket.on("from_client_to_specific", (id, msg) => {
-    socket.to(id).emit("from_server", msg);
+  socket.on("_answer", (offerObj, ackFunction) => {
+    const toSend = offerObj.offererSocket;
+
+    const offerToUpdate = offers.find(
+      (o) => o.offererSocket == offerObj.offererSocket
+    );
+
+    if (!offerToUpdate) {
+      console.log("not found offer to update");
+      return;
+    }
+    ackFunction(offerToUpdate.offerIceCandidate);
+    offerToUpdate.answer = offerObj.answer;
+    offerToUpdate.answererSocket = socket.id;
+
+    socket.to(toSend).emit("_answer", offerToUpdate);
   });
 
-  socket.on("ring", (data) => {
-    socket.to(data.to).emit("ring", data);
+  socket.on("_candidate", (iceCandidateObj) => {
+    const { iceCandidate, iceSenderSocket, didIOffer } = iceCandidateObj;
+
+    if (didIOffer) {
+      const offerInOffers = offers.find(
+        (o) => o.offererSocket === iceSenderSocket
+      );
+
+      if (offerInOffers) {
+        offerInOffers.offerIceCandidate.push(iceCandidate);
+
+        if (offerInOffers.answererSocket) {
+          socket
+            .to(offerInOffers.answererSocket)
+            .emit("_candidate", iceCandidate);
+        } else {
+          console.log("Ice candidate recieved but could not find answere");
+          console.log(offerInOffers);
+        }
+      } else {
+        console.log("not found ice offerer");
+      }
+    } else {
+      // coming from answerer
+      // pass it to offerer
+      const offerInOffers = offers.find(
+        (o) => o.answererSocket === iceSenderSocket
+      );
+
+      if (offerInOffers?.offererSocket) {
+        socket.to(offerInOffers.offererSocket).emit("_candidate", iceCandidate);
+      } else {
+        console.log("Ice candidate recieved but could not find offerer");
+        console.log(offerInOffers);
+      }
+    }
   });
 
-  socket.on("ring-agree", (data) => {
-    socket.to(data.to).emit("ring-agree", data);
+  socket.on("disconnect", () => {
+    console.log("user disconnected ->", socket.id);
   });
-
-  socket.on("rtc_offer", (data) => {
-    console.log("rtc_offer");
-    socket.to(data.to).emit("rtc_offer", data);
-  });
-
-  socket.on("rtc_answer", (data) => {
-    console.log("rtc_answer");
-    socket.to(data.to).emit("rtc_answer", data);
-  });
-
-  socket.on("disconnect", () => console.log("user disconnected ->", socket.id));
 });
 
 const PORT = process.env.PORT || 3000;

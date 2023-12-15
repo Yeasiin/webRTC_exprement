@@ -36,7 +36,8 @@ function init() {
   // socket init
   const socketBackend = import.meta.env.PROD
     ? "https://webrtcexprement-production.up.railway.app"
-    : "http://localhost:3000";
+    : "https://capable-subtle-raven.ngrok-free.app";
+  // : "http://localhost:3000";
 
   console.log(socketBackend);
 
@@ -46,6 +47,7 @@ function init() {
   const ownSocketId = document.querySelector("[ownSocketId]");
   const callMeBtn = document.querySelector(".call-me-btn");
   const callBtn = document.querySelector(".call-start");
+  const callBtnRing = document.querySelector(".call-start-ring");
 
   const ownVideo = document.querySelector(
     "video[localPeer]"
@@ -82,14 +84,10 @@ function init() {
 
     socket?.emit("ring", args);
   });
-
-  askCameraPermissionBtn?.addEventListener("click", () => {
-    navigator.permissions
-      // @ts-ignore
-      .query({ name: "camera" })
-      .then((data) => console.log(data))
-      .catch((err) => console.log(err));
-    console.log("hello");
+  callBtnRing?.addEventListener("click", () => {
+    // const args = { to: store.remoteSocketId, from: store.socketId };
+    // if (!args.to || !args.from) return console.log("what are you doing?");
+    socket?.emit("ring");
   });
 
   // rtc connection
@@ -166,10 +164,19 @@ function init() {
     const args = { to: data.from, from: data.to };
     if (store.isAcceptOffer) {
       socket.emit("ring-agree", args);
+      socket.emit("ring:agree", args);
     }
   });
 
   socket.on("ring-agree", (data) => {
+    const arg = { from: data.to, to: data.from };
+
+    if (!arg.to || !arg.from) return console.log("what are you doing?");
+
+    console.log(sendChannel);
+    peerConnectionOffer(arg as RecipientType);
+  });
+  socket.on("ring:agree", (data) => {
     const arg = { from: data.to, to: data.from };
 
     if (!arg.to || !arg.from) return console.log("what are you doing?");
@@ -185,6 +192,12 @@ function init() {
     peerConnectionAccept(data);
   });
 
+  // socket.on("ice-candidate", (candidate) => {
+  //   // Add ICE candidate received from peer
+  //   console.log("ice setting on local");
+  //   localConnection?.addIceCandidate(new RTCIceCandidate(candidate));
+  // });
+
   socket.on("rtc_answer", (data) => {
     console.log("rtc_answer");
     localConnection
@@ -193,7 +206,7 @@ function init() {
         if (store.isFirst) {
           const args = { to: data.from, from: data.to };
           if (!args.to || !args.from) return console.log("what are you doing?");
-          socket?.emit("ring", args);
+          // socket?.emit("ring", args);
           store.isFirst = false;
         }
       })
@@ -248,16 +261,93 @@ function init() {
   remoteConnection.addEventListener("track", async (event) => {
     const [remoteSteam] = event.streams;
     console.log(remoteSteam);
+    remoteVideo.classList.add("remoteVisible");
+    ownVideo.classList.add("remoteVisible");
     remoteVideo.srcObject = remoteSteam;
-    console.log("remote -track");
+    console.log("remote 😀 -track");
+  });
+
+  remoteConnection.addEventListener("connectionstatechange", (event) => {
+    switch (remoteConnection.connectionState) {
+      case "closed":
+        console.log("remote call disconnect");
+        break;
+    }
+  });
+  remoteConnection.addEventListener("iceconnectionstatechange", () => {
+    switch (remoteConnection.iceConnectionState) {
+      case "closed":
+        console.log("remote call closed by ice");
+        break;
+
+      case "disconnected":
+        console.log(" remote call disconnected by ice");
+        remoteVideo.classList.remove("remoteVisible");
+        ownVideo.classList.remove("remoteVisible");
+
+        break;
+
+      case "connected":
+      case "completed":
+        console.log("ice remote connected");
+        // You can handle the call being connected here.
+        break;
+    }
+  });
+  localConnection.addEventListener("connectionstatechange", (event) => {
+    switch (localConnection.connectionState) {
+      case "closed":
+        console.log("remote call disconnect");
+        break;
+    }
+  });
+  localConnection.addEventListener("iceconnectionstatechange", () => {
+    switch (localConnection.iceConnectionState) {
+      case "closed":
+        console.log("local call closed by ice");
+        break;
+
+      case "disconnected":
+        console.log(" local call disconnected by ice");
+        remoteVideo.classList.remove("remoteVisible");
+        ownVideo.classList.remove("remoteVisible");
+        break;
+
+      case "connected":
+      case "completed":
+        console.log("ice local connected");
+        // You can handle the call being connected here.
+        break;
+    }
   });
 
   localConnection.addEventListener("track", async (event) => {
     const [remoteSteam] = event.streams;
     console.log(remoteSteam);
+    remoteVideo.classList.add("remoteVisible");
+    ownVideo.classList.add("remoteVisible");
     remoteVideo.srcObject = remoteSteam;
-    console.log("local -track");
+    console.log("local 😀 -track");
   });
+
+  // localConnection.addEventListener("icecandidate", (event) => {
+  //   if (event.candidate) {
+  //     socket?.emit("ice-candidate", event.candidate, {
+  //       to: store.remoteSocketId,
+  //       from: store.socketId,
+  //     });
+  //     console.log("local", event.candidate);
+  //   }
+  // });
+  // remoteConnection.addEventListener("icecandidate", (event) => {
+  //   if (event.candidate) {
+  //     socket?.emit("ice-candidate", event.candidate, {
+  //       to: store.remoteSocketId,
+  //       from: store.socketId,
+  //     });
+  //     console.log("remote", event.candidate);
+  //   }
+  // });
 
   function peerConnectionOffer({ to, from }: RecipientType) {
     localConnection
@@ -305,8 +395,6 @@ function init() {
       localConnection.addTrack(track, steam);
       remoteConnection.addTrack(track, steam);
     });
-
-    // const videoTracks = steam.getVideoTracks();
 
     window._steam = steam; // making available to steam to window
     ownVideo.srcObject = steam;

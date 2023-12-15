@@ -11,38 +11,37 @@
 <body>
   <div id="app">
 
-    <div class="videos">
-      <video localPeer src="//commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" autoplay
-        muted></video>
+    <div class="videos container">
+      <video localPeer src="//commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        autoplay></video>
 
-      <video remotePeer src="//commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" autoplay
-        muted></video>
+      <video remotePeer isVisible="false"
+        src="//commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" autoplay></video>
     </div>
 
-    <form class="mt-2" name="socket">
+    <!-- <form class="mt-2" name="socket">
       <div class="d-flex gap-2">
         <input type="text" name="otherSocketId" id="otherSocketId">
         <button type="submit">Send Socket</button>
       </div>
-    </form>
+    </form> -->
+    <div class="container">
+      <form class="mt-1" name="rtc">
+        <div class="d-flex flex-column gap-1 items-start">
+          <textarea name="message" id="message" cols="30" rows="5"></textarea>
+          <button type="submit">Send Message</button>
+        </div>
+      </form>
 
-    <form class="mt-1" name="rtc">
-      <div class="d-flex gap-2 items-end">
-        <textarea name="message" id="message" cols="30" rows="10"></textarea>
-        <button type="submit">Send RTC</button>
+      <div class="mt-2">
+        <button class="call-me-btn">Ready?</button>
+        <button class="call-start-ring">Ring</button>
+        <button class="call-start" isVisible="false">Call 📲</button>
+
+        <button ownSocketId="" hidden>Copy Id</button>
       </div>
-    </form>
 
-    <div class="mt-2">
-      <button class="call-me-btn">Ready?</button>
-      <button class="call-start" isVisible="false">Call 📲</button>
-
-      <button class="permission-camera">Camera</button>
-      <button>Audio</button>
-      <button ownSocketId="">Copy Id</button>
     </div>
-
-
 
   </div>
 
